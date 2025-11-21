@@ -1,0 +1,170 @@
+INCLUDE Irvine32.inc
+
+.data
+menu BYTE 0Dh,0Ah,'1.Addition 2.Subtraction 3.Multiplication 4.Division 5.Power 6.Factorial 7.Square 8.Cube 9.%',0Dh,0Ah,\
+                      '10.Matrix Addition 11.Matrix Multiplication 12.Permutation 13.Combination 14. Trignometric Functions 0.Exit',0Dh,0Ah,\
+
+msgOpt BYTE "Enter your choice: ", 0
+msgIn1  BYTE "Enter First number: ", 0
+msgIn2 BYTE "Enter Second number: ", 0
+msgBase BYTE "Enter Base number: ",
+msgArows BYTE "Enter Matrix A Row Size (UPTO 3): ", 0
+msgBrows BYTE "Enter Matrix B Row Size (UPTO 3): ", 0
+msgAcols BYTE "Enter Matrix A Column Size (UPTO 3): ", 0
+msgBcols BYTE "Enter Matrix B Column Size (UPTO 3): ", 0
+msgCresult BYTE "Resultant Matrix: ", 0
+msgA BYTE "Enter Matrix A Elements (Row-Wise)", 0
+msgA BYTE "Enter Matrix B Elements (Row-Wise)", 0
+msgResult BYTE "Answer: ", 0
+choice DWORD ?
+num1 SDWROD ?
+num2 SDWORD ?
+rowsA DWORD ?
+rowsB DWORD ?
+colsA DWORD ?
+colsB DWORD ?
+matrixA SDWORD 9 DUP(0)
+matrixB SDWORD 9 DUP(0)
+matrixC SDWORD 9 DUP(0)
+result SDWORD ?
+
+
+.code
+main PROC
+
+mainMenu:
+    mov edx, OFFSET menu
+    call WriteString
+    mov edx, OFFSET msgOpt
+    call WriteString
+    call ReadInt
+    mov choice, eax
+
+    cmp choice, 0
+    JE exit_prog
+
+    cmp choice, 1
+    JE add_proc
+
+    cmp choice, 2
+    JE sub_proc
+
+    cmp choice, 3
+    JE mul_proc
+
+    cmp choice, 4
+    JE div_proc
+
+    cmp choice, 5
+    JE pow_proc
+
+    cmp choice, 6
+    JE fact_proc
+
+    cmp choice, 7
+    JE sq_proc
+
+    cmp choice, 8
+    JE cube_proc
+
+    cmp choice, 9
+    JE percentage_proc
+
+    cmp choice, 10
+    JE matrix_add
+
+    cmp choice, 11
+    JE matrix_mul
+
+    cmp choice, 12
+    JE perm_proc
+
+    cmp choice, 13
+    JE comb_proc
+
+    cmp choice, 14
+    JE trig_func
+
+    jmp mainMenu
+
+add_proc PROC
+    mov edx, OFFSET msgIn1
+    call WriteString
+    call ReadInt
+    mov num1, eax
+
+    mov edx, OFFSET msgIn2
+    call WriteString
+    call ReadInt
+    mov num2, eax
+
+    mov eax, num1
+    add eax, num2
+    mov result, eax
+
+    mov edx, OFFSET msgResult
+    call WriteString
+    mov eax, result
+    call writeInt
+    call Crlf
+
+    jmp mainMenu
+add_proc ENDP
+
+sub_proc PROC
+    mov edx, OFFSET msgIn1
+    call WriteString
+    call ReadInt
+    mov num1, eax
+
+    mov edx, OFFSET msgIn2
+    call WriteString
+    call ReadInt
+    mov num2, eax
+
+    mov eax, num1
+    sub eax, num2
+    mov result, eax
+
+    mov edx, OFFSET msgResult
+    call WriteString
+    mov eax, result
+    call writeInt
+    call Crlf
+
+    jmp mainMenu
+sub_proc ENDP
+
+
+sq_proc PROC
+    mov edx, OFFSET msgBase
+    call WriteString
+    call ReadInt
+    mov num1, eax
+
+    mov eax, num1
+    imul eax, eax
+    mov result, eax
+
+    mov edx, OFFSET 
+    mov edx, OFFSET msgResult
+    call WriteString
+    mov eax, result
+    call writeInt
+    call Crlf
+
+    jmp mainMenu
+sq_proc ENDP
+
+
+matrix_mul PROC
+    mov edx, OFFSET matSizeMsg
+    call WriteString
+    call ReadInt
+matrix_mul ENDP
+
+exit_prog PROC
+    exit
+
+main endp
+END main
