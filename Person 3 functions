@@ -1,0 +1,431 @@
+SCIENTIFIC CALCULATOR PROJECT
+PERSON 3 FUNCTIONS
+1.	Factorial 
+2.	Cube 
+3.	Percentage
+4.	nCr
+5.	Trigonometric functions – sin, cos, tan
+
+
+-----------------FACTORIAL
+
+INCLUDE Irvine32.inc
+
+.data
+prompt BYTE "Enter a number: ",0
+msg BYTE "Factorial of the input number: ",0
+
+.code
+main PROC
+ mov edx, OFFSET prompt
+ call WriteString
+ call ReadInt
+
+ push eax
+ call Fact
+ mov edx, OFFSET msg
+call WriteString
+call WriteInt
+
+  exit
+main ENDP
+
+Fact PROC
+push ebp
+mov ebp, esp
+mov eax, [ebp + 8]
+cmp eax, 0
+ja L1
+mov eax, 1
+jmp L2
+
+L1:
+dec eax
+push eax
+call Fact
+
+ReturnFact:
+mov ebx, [ebp + 8]
+mul ebx
+
+
+L2:
+leave
+ret 4
+
+
+Fact ENDP
+
+END main
+
+
+
+--------------CUBE
+
+INCLUDE Irvine32.inc
+
+.data
+prompt BYTE "Enter a number: ",0
+msg BYTE "Cube of the input number: ",0
+
+.code
+main PROC
+ mov edx, OFFSET prompt
+ call WriteString
+ call crlf
+ call ReadInt
+
+ call LocalCube
+
+  exit
+main ENDP
+
+LocalCube PROC
+enter 4,0
+mov [ebp - 4], eax
+mov eax, [ebp - 4]
+mov ebx, eax
+mul ebx
+mul ebx
+mov edx, OFFSET msg
+call WriteString
+call WriteDec
+call crlf
+
+leave 
+ret
+
+LocalCube ENDP
+
+END main
+
+
+
+-----------------PERCENTAGE
+
+INCLUDE Irvine32.inc
+
+.data
+    prompt1 BYTE "Enter first number: ",0
+    prompt2 BYTE "Enter second number: ",0
+    resultMsg BYTE "Percentage = ",0
+
+    num1 DWORD ?
+    num2 DWORD ?
+    result DWORD ?
+
+.code
+main PROC
+mov edx, OFFSET prompt1
+call WriteString
+call ReadInt
+push eax
+mov edx, OFFSET prompt2
+call WriteString
+call ReadInt
+push eax
+
+call calculatepercent
+   
+
+    exit
+main ENDP
+
+
+calculatepercent PROC
+push ebp
+mov ebp, esp
+mov eax, [ebp + 8]   ; num1
+mov ebx, [ebp + 12]  ; num2
+
+mov ecx, 100
+xor edx, edx
+
+mul ebx              ; eax = (num1/100) * num2
+div ecx              ; eax = num1/100
+
+mov result, eax
+mov edx, OFFSET resultMsg
+call WriteString
+call WriteInt
+call crlf
+
+pop ebp
+ret 8
+
+calculatepercent ENDP
+
+END main
+
+
+---------------nCr
+
+INCLUDE Irvine32.inc
+
+.data
+prompt1 BYTE "Enter first number (n): ",0
+prompt2 BYTE "Enter second number (r): ",0
+
+n DWORD ?
+r DWORD ?
+nMINUSr DWORD ?
+
+nfact DWORD ?
+rfact DWORD ?
+nMINUSrFact DWORD ?
+
+nCr DWORD ?
+
+msg BYTE "nCr: ",0
+
+.code
+main PROC
+ mov edx, OFFSET prompt1
+ call WriteString
+ call ReadInt
+ mov n, eax
+ push eax           ; n
+
+ mov edx, OFFSET prompt2
+ call WriteString
+ call ReadInt 
+ mov r, eax
+ push eax           ; r
+
+ mov ecx, n
+ mov ebx, r
+ sub ecx, ebx
+ mov nMINUSr, ecx
+ 
+
+ call nCrfunc
+
+
+  exit
+main ENDP
+
+
+nCrfunc PROC
+mov eax, 0
+mov ebx, 0
+mov ecx, 0
+mov edx, 0
+
+push ebp
+mov ebp, esp
+
+mov eax, [ebp + 12]   ; n
+push eax
+call Fact
+add eax, 4
+mov nfact, eax
+
+mov eax, [ebp+8]    ; r
+    push eax
+    call Fact
+    add  esp, 4
+    mov rfact, eax
+
+mov eax, nMINUSr
+    push eax
+    call Fact
+    add  esp, 4
+    mov nMINUSrFact, eax
+
+mov eax, rfact
+mov ebx, nMINUSrFact
+mul ebx               ; eax = r! * (n-r)!
+
+mov ecx, eax           ; ecx = r! * (n-r)!
+mov eax, nfact        ; eax = n!
+
+xor edx, edx
+div ecx               ; eax = n! / r! * (n-r)!
+
+mov edx, OFFSET msg
+call WriteString
+call WriteInt
+call crlf
+
+pop ebp
+ret 8
+nCrfunc ENDP
+
+
+
+;  FACTORIAL FUNCTION
+Fact PROC
+    push ebp
+    mov  ebp, esp
+
+    mov eax, [ebp+8]   ; n
+    cmp eax, 1
+    jbe BaseCase       ; if n <= 1 return 1
+
+    dec eax            ; n-1
+    push eax
+    call Fact          ; returns (n-1)!
+    
+    mov ebx, [ebp+8]   ; n
+    mul ebx            ; eax = (n-1)! * n
+    jmp Done
+
+BaseCase:
+    mov eax, 1
+
+Done:
+mov esp, ebp
+    pop ebp
+    ret 4
+Fact ENDP
+
+
+END main
+
+
+
+
+
+----------------TRIGONOMETRIC FUNCTION
+
+INCLUDE Irvine32.inc
+
+.data
+menuMsg    BYTE "Choose an option:",0dh,0ah,
+           "1. sin(x)",0dh,0ah,
+           "2. cos(x)",0dh,0ah,
+           "3. tan(x)",0dh,0ah,
+           "4. Exit",0dh,0ah,
+           "Enter choice: ",0
+
+angleMsg   BYTE "Enter angle in degrees: ",0
+resultMsg  BYTE "Result = ",0
+
+degToRad   REAL8 0.017453292519943295   ; PI/180
+mul_10000  REAL8 10000.0
+
+.data?
+tempInt DWORD ?
+
+.code
+
+main PROC
+    call TrigonometricCalculation
+    exit
+main ENDP
+
+TrigonometricCalculation PROC
+
+main_loop:
+    mov edx, OFFSET menuMsg
+    call WriteString
+
+    call ReadInt
+    mov ebx, eax          ; choice
+
+    cmp ebx, 4
+    je done               ; exit if 4
+
+    cmp ebx, 1
+    je do_sin
+    cmp ebx, 2
+    je do_cos
+    cmp ebx, 3
+    je do_tan
+
+    jmp main_loop         ; invalid input
+
+
+;\SIN
+do_sin:
+    call ReadAngleToST0
+    fsin
+    call PrintFixedFloat
+    jmp main_loop
+
+
+;COS
+do_cos:
+    call ReadAngleToST0
+    fcos
+    call PrintFixedFloat
+    jmp main_loop
+
+
+;TAN
+do_tan:
+    call ReadAngleToST0
+    fptan
+    fstp st(0)            ; remove 1.0
+    call PrintFixedFloat
+    jmp main_loop
+
+
+; Convert degrees to radians and leave result in ST(0)
+ReadAngleToST0 PROC
+    mov edx, OFFSET angleMsg
+    call WriteString
+    call ReadFloat            ; ST(0)=degrees
+
+    fld degToRad              ; ST(0)=PI/180, ST(1)=degrees
+    fmulp st(1), st(0)        ; ST(0)=degrees*(PI/180)
+    ret
+ReadAngleToST0 ENDP
+
+
+; Print ST(0) as a NUMBER WITH 4 DECIMAL PLACES
+PrintFixedFloat PROC
+
+    mov edx, OFFSET resultMsg
+    call WriteString
+
+    ; Multiply by 10000
+    fld mul_10000             ; ST(0)=10000, ST(1)=result
+    fmulp st(1), st(0)        ; ST(0)=result*10000
+
+    fistp tempInt             ; store integer
+
+    ; Split integer into integer and fraction
+    mov eax, tempInt
+    mov ebx, 10000
+    mov edx, 0
+    div ebx                   ; eax = int part, edx = fraction
+
+    ; print integer part
+    call WriteDec
+
+    ; print decimal point
+    mov al, '.'
+    call WriteChar
+
+    ; print 4-digit fraction with leading zeros
+    mov eax, edx
+    mov ecx, 4
+print_frac:
+    mov ebx, 10
+    mov edx, 0
+    div ebx
+    push dx
+    loop print_frac
+
+    mov ecx, 4
+print_digits:
+    pop dx
+    add dl, '0'
+    mov al, dl
+    call WriteChar
+    loop print_digits
+
+    call CrLf
+    call CrLf
+    ret
+PrintFixedFloat ENDP
+
+
+
+done:
+    ret
+TrigonometricCalculation ENDP
+
+
+END main
