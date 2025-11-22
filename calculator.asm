@@ -134,6 +134,50 @@ Multiplication PROC
     ret
 Multiplication ENDP
 
+DivisionOperation PROC
+
+    mov edx, OFFSET msgDividend
+    call WriteString
+    call ReadInt
+    mov ebx, eax
+
+    mov edx, OFFSET msgDivisor
+    call WriteString
+    call ReadInt
+    mov ecx, eax
+
+    cmp ecx, 0
+    jne PerformDivision
+    
+    mov edx, OFFSET msgError
+    call WriteString
+    call Crlf
+    ret
+
+PerformDivision:
+    mov eax, ebx
+    cdq
+    idiv ecx
+
+    mov quotient, eax
+    mov remainder, edx
+
+    mov edx, OFFSET msgQuotient
+    call WriteString
+    mov eax, quotient
+    call WriteInt
+    call Crlf
+
+    mov edx, OFFSET msgRemainder
+    call WriteString
+    mov eax, remainder
+    call WriteInt
+    call Crlf
+
+    ret
+DivisionOperation ENDP
+
+
 ;-------------------------
 ; Square
 sqProc PROC
@@ -551,6 +595,9 @@ mainMenu:
     cmp choice, 3
     JE doMul
 
+    cmp eax, 4
+    JE doDivision
+
     cmp eax, 5
     JE doPower
 
@@ -574,6 +621,10 @@ doSub:
 
 doMul:
     call Multiplication
+    jmp mainMenu
+
+doDivision:
+    call DivisionOperation
     jmp mainMenu
 
 doSquare:
