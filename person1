@@ -1,0 +1,511 @@
+Person 1
+Matrix Addition
+INCLUDE Irvine32.inc
+
+.data
+
+msgRows BYTE "Enter number of rows (max 3): ",0
+msgCols BYTE "Enter number of columns (max 3): ",0
+msgA BYTE "Enter Matrix A elements: ",0
+msgB BYTE "Enter Matrix B elements: ",0
+msgResult BYTE "Result C (A + B): ",0
+
+MatrixA SDWORD 9 DUP(?)    ; for max 3x3 matrices
+MatrixB SDWORD 9 DUP(?)
+MatrixC SDWORD 9 DUP(?)
+
+rows DWORD ?
+cols DWORD ?
+totalElements DWORD ?
+
+.code
+main PROC
+    call MatrixAddition
+    exit
+main ENDP
+
+MatrixAddition PROC
+
+      ; for inputting rows
+    mov edx, OFFSET msgRows
+    call WriteString
+    call ReadInt
+    mov rows, eax  ; store given values by user from eax to rows
+
+    ; for inputting columns
+    mov edx, OFFSET msgCols
+    call WriteString
+    call ReadInt
+    mov cols, eax  ; store given values by user from eax to cols
+
+    ; for finding total number of elements, rows*cols
+    mov eax, rows
+    mul cols      
+    mov totalElements, eax
+    mov ecx, totalElements  ; use ecx for loops
+
+    ; inputting matrix A elements
+    mov edx, OFFSET msgA
+    call WriteString
+    call Crlf
+
+    mov esi, OFFSET MatrixA  ; pointing to first element of Matrix A
+
+ ReadA:  ; storing each element of Matrix A via loop
+    call ReadInt
+    mov [esi], eax
+    add esi, 4   ; SDWORD is of 4 bytes
+    loop ReadA
+
+    ; inputting matrix B elements
+    mov edx, OFFSET msgB
+    call WriteString
+    call Crlf
+
+    mov ecx, totalElements  ; reset ECX for loop
+
+    mov esi, OFFSET MatrixB ; pointing to first element of Matrix B
+
+ReadB:  ; storing each element of Matri B via loop
+    call ReadInt
+    mov [esi], eax
+    add esi, 4
+    loop ReadB
+
+    ; Addition of Matrices A and B
+
+    mov ecx, totalElements  ; reset ECX for addition loop
+
+    mov esi, OFFSET MatrixA
+    mov edi, OFFSET MatrixB
+    mov ebx, OFFSET MatrixC
+
+AddLoop:
+    mov eax, [esi]
+    add eax, [edi]
+    mov [ebx], eax
+
+    add esi, 4
+    add edi, 4
+    add ebx, 4
+    loop AddLoop
+
+    ; displaying resultant matrix
+    mov edx, OFFSET msgResult
+    call WriteString
+    call Crlf
+
+    mov ecx, rows    ; save rows in ecx for outer loop
+    mov edx, cols    ; save columns in edx for outer loop
+
+    mov esi, OFFSET MatrixC  ; point to first element of resultant matrix
+
+PrintRows:
+    push ecx             ; save row counter
+    mov ecx, edx         ; ECX = columns
+
+PrintCols:
+    mov eax, [esi]
+    call WriteInt
+
+    mov al, ' '
+    call WriteChar
+
+    add esi, 4
+    loop PrintCols
+
+    call Crlf
+    pop ecx               ; restore row counter
+    loop PrintRows
+
+    ret
+MatrixAddition ENDP
+
+END main
+
+Integer Multiplication
+INCLUDE Irvine32.inc
+
+.data
+
+msgNum1 BYTE "Enter first number: ",0
+msgNum2 BYTE "Enter second number: ",0
+msgResult BYTE "Multiplication result: ",0
+product SDWORD ?
+
+.code
+
+main PROC
+
+    call Multiplication
+    exit
+
+main ENDP
+
+Multiplication PROC
+
+    ; inputting first number
+    mov edx, OFFSET msgNum1
+    call WriteString
+    call ReadInt
+    mov ebx, eax        ; saving first num in ebx
+
+    ; inputting second number
+    mov edx, OFFSET msgNum2
+    call WriteString
+    call ReadInt
+    mov ecx, eax        ; saving second number in ecx
+
+    ; multiplying num1 and num2
+    mov eax, ebx       
+    imul ecx            
+    mov product, eax    
+
+    ; result
+    mov edx, OFFSET msgResult
+    call WriteString
+    call WriteInt
+    call Crlf
+
+    ret
+Multiplication ENDP
+
+END main
+
+POWER
+INCLUDE Irvine32.inc
+
+.data
+    msgBase        BYTE "Enter base: ",0
+    msgExponent    BYTE "Enter exponent: ",0
+    msgResult      BYTE "Power result: ",0
+    msgFraction    BYTE "Fraction form: 1/",0
+    msgDecimal     BYTE "Decimal form: ",0
+    msgOne         BYTE "1",0
+    msgNegativeOne BYTE "-1",0
+    
+    base           SDWORD ?
+    exponent       SDWORD ?
+    result         SDWORD 1
+    temp           SDWORD ?
+    decimalResult  REAL8 ?
+
+.code
+main PROC
+    call PowerCalculation
+    exit
+main ENDP
+
+PowerCalculation PROC
+
+       ; Input base from user
+    mov  edx, OFFSET msgBase
+    call WriteString
+    call ReadInt
+    mov  base, eax
+
+      ; Input exponent from user
+    mov  edx, OFFSET msgExponent
+    call WriteString
+    call ReadInt
+    mov  exponent, eax
+
+    ; Handle exponent = 0 case
+    cmp  eax, 0
+    jne  NotZero
+    mov  eax, 1
+    jmp  DisplayIntegerResult
+
+NotZero:
+    ; Check if exponent is positive or negative
+    mov  eax, exponent
+    cmp  eax, 0
+    jg   PositiveExponent
+    jl   NegativeExponent
+
+PositiveExponent:
+    ; Calculate positive power
+    mov  eax, 1                    ; Initialize result to 1
+    mov  ecx, exponent          
+    mov  ebx, base              
+
+PositivePowerLoop:
+
+    imul ebx                    
+    loop PositivePowerLoop   
+    jmp  DisplayIntegerResult
+
+NegativeExponent:
+
+    ; For negative exponents:
+    mov  eax, exponent
+    neg  eax                       ; Converting negative exponent to positive
+    mov  ecx, eax                  ; ECX = |exp|
+    mov  ebx, base             
+
+    ; Special case: base=1
+    cmp  ebx, 1
+    je   BaseIsOne
+    cmp  ebx, -1
+    je   BaseIsNegativeOne
+
+    ; Calculating base^|exp|
+    mov  eax, 1                  
+    mov  edx, 0                  
+
+CalculatePositivePower:
+    imul ebx                       
+    jo   OverflowDetected          ; Check for overflow
+    loop CalculatePositivePower  
+    
+    mov  result, eax
+    
+    ; Display fraction form
+    mov  edx, OFFSET msgResult
+    call WriteString
+    call Crlf
+    
+    mov  edx, OFFSET msgFraction
+    call WriteString
+    mov  eax, result
+    call WriteInt
+    call Crlf
+    
+    ; display decimal form
+    call DisplayDecimalForm
+    jmp  Done
+
+BaseIsOne:
+
+    ; 1^negative_exp = 1
+    mov  eax, 1
+    jmp  DisplayIntegerResult
+
+BaseIsNegativeOne:
+
+    ; (-1)^negative_exp
+    test ecx, 1                    ; Check if |exp| is odd
+    jz   NegativeOneEven
+    mov  eax, -1                   ; (-1)^odd = -1
+    jmp  DisplayIntegerResult
+
+NegativeOneEven:
+    mov  eax, 1                    ; (-1)^even = 1
+    jmp  DisplayIntegerResult
+
+DisplayDecimalForm PROC
+    ; Convert integer to REAL8 for decimal calculation
+    fild result                    ; Load integer result into FPU
+    fld1                          ; Load 1.0 into FPU
+    fdiv                          ; Divide 1.0 by result (1/result)
+    
+    ; Display decimal form
+    mov  edx, OFFSET msgDecimal
+    call WriteString
+    call WriteFloat
+    call Crlf
+    call Crlf
+    
+    fstp decimalResult            ; Pop from FPU stack and store
+    ret
+DisplayDecimalForm ENDP
+
+OverflowDetected:
+    ; If overflow occurred, display fraction with original calculation
+    mov  edx, OFFSET msgResult
+    call WriteString
+    mov  edx, OFFSET msgFraction
+    call WriteString
+    mov  eax, base
+    call WriteInt
+    mov  al, '^'
+    call WriteChar
+    mov  eax, exponent
+    neg  eax
+    call WriteInt
+    call Crlf
+    
+    ; Cannot calculate decimal form due to overflow
+    mov  edx, OFFSET msgDecimal
+    call WriteString
+    mov  edx, OFFSET msgOverflow
+    call WriteString
+    call Crlf
+    jmp  Done
+
+DisplayIntegerResult:
+
+    ; Display integer result for positive exponents and special cases
+    mov  result, eax
+    mov  edx, OFFSET msgResult
+    call WriteString
+    call WriteInt
+    call Crlf
+
+Done:
+    ret
+
+msgOverflow BYTE "Error! Overflow.",0
+PowerCalculation ENDP
+
+END main
+
+DIVISION
+
+INCLUDE Irvine32.inc
+
+.data
+
+msgDividend BYTE "Enter dividend: ",0
+msgDivisor BYTE "Enter divisor: ",0
+msgQuotient BYTE "Quotient: ",0
+msgRemainder BYTE "Remainder: ",0
+msgError BYTE "Error: Division by zero!",0
+quotient SDWORD ?
+remainder SDWORD ?
+
+.code
+main PROC
+    call DivisionOperation
+    exit
+main ENDP
+
+DivisionOperation PROC
+
+    ; inputting dividend
+    mov edx, OFFSET msgDividend
+    call WriteString
+    call ReadInt
+    mov ebx, eax        ; storing dividend in EBX
+
+    ; inputting divisor
+    mov edx, OFFSET msgDivisor
+    call WriteString
+    call ReadInt
+    mov ecx, eax        ; storing divisor in ECX
+
+    ; check for division by zero
+    cmp ecx, 0
+    jne PerformDivision
+    
+    ; if division by zero error
+    mov edx, OFFSET msgError
+    call WriteString
+    call Crlf
+    ret
+
+PerformDivision:
+    ; Prepare for division
+    mov eax, ebx        
+    cdq                 ; extend sign to EDX
+    idiv ecx            
+
+    mov quotient, eax
+    mov remainder, edx
+
+    ; display quotient
+    mov edx, OFFSET msgQuotient
+    call WriteString
+    mov eax, quotient
+    call WriteInt
+    call Crlf
+
+    ; display remainder
+    mov edx, OFFSET msgRemainder
+    call WriteString
+    mov eax, remainder
+    call WriteInt
+    call Crlf
+
+    ret
+DivisionOperation ENDP
+
+END main
+
+NPR 
+INCLUDE Irvine32.inc
+
+.data
+msgN BYTE "Enter n (total items): ",0
+msgR BYTE "Enter r (selected items): ",0
+msgResult BYTE "nPr result: ",0
+msgError BYTE "Error: r cannot be greater than n!",0
+n_value DWORD ?
+r_value DWORD ?
+result DWORD 1
+
+.code
+
+main PROC
+    call PermutationCalculation
+    exit
+main ENDP
+
+Factorial PROC
+    ; Calculate factorial of number in ECX
+    push ecx
+    mov eax, 1
+    
+    cmp ecx, 0
+    je FactorialDone
+    
+FactorialLoop:
+    imul ecx
+    loop FactorialLoop
+
+FactorialDone:
+    pop ecx
+    ret
+Factorial ENDP
+
+PermutationCalculation PROC
+    ; inputting n
+    mov edx, OFFSET msgN
+    call WriteString
+    call ReadInt
+    mov n_value, eax
+
+    ; inputting r
+    mov edx, OFFSET msgR
+    call WriteString
+    call ReadInt
+    mov r_value, eax
+
+    ; validating input
+    mov ebx, n_value
+    cmp eax, ebx
+    jle CalculatePermutation
+    
+    ; error message if r > n
+    mov edx, OFFSET msgError
+    call WriteString
+    call Crlf
+    ret
+
+CalculatePermutation:
+    ; nPr = n! / (n-r)!
+    mov ecx, n_value
+    call Factorial      ; calculate n!
+    mov ebx, eax       ; store n! in EBX
+
+    mov eax, n_value
+    sub eax, r_value   ; n-r
+    mov ecx, eax
+    call Factorial      ; calculate (n-r)!
+
+    ; Divide n! by (n-r)!
+    mov eax, ebx       ; n! in EAX
+    mov edx, 0
+    div ecx            ; divide by (n-r)!
+
+    ; Display result
+    mov result, eax
+    mov edx, OFFSET msgResult
+    call WriteString
+    call WriteDec  
+    call Crlf
+
+    ret
+PermutationCalculation ENDP
+
+END main
