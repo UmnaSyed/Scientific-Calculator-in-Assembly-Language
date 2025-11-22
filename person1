@@ -303,8 +303,6 @@ CalculatePositivePower:
     mov  eax, result
     call WriteInt
     call Crlf
-
-    call DisplayDecimalForm
     jmp  Done
 
 BaseIsOne:
@@ -321,21 +319,6 @@ NegativeOneEven:
     mov  eax, 1
     jmp  DisplayIntegerResult
 
-DisplayDecimalForm PROC
-    fild result
-    fld1
-    fdiv
-    
-    mov  edx, OFFSET msgDecimal
-    call WriteString
-    call WriteFloat
-    call Crlf
-    call Crlf
-    
-    fstp decimalResult
-    ret
-DisplayDecimalForm ENDP
-
 OverflowDetected:
     mov  edx, OFFSET msgResultPow
     call WriteString
@@ -348,12 +331,6 @@ OverflowDetected:
     mov  eax, exponent
     neg  eax
     call WriteInt
-    call Crlf
-    
-    mov  edx, OFFSET msgDecimal
-    call WriteString
-    mov  edx, OFFSET msgOverflow
-    call WriteString
     call Crlf
     jmp  Done
 
