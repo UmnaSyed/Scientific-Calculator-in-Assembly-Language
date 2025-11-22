@@ -154,6 +154,134 @@ sqProc PROC
     ret
 sqProc ENDP
 
+PowerCalculation PROC
+
+    mov  edx, OFFSET msgBase
+    call WriteString
+    call ReadInt
+    mov  base, eax
+
+    mov  edx, OFFSET msgExponent
+    call WriteString
+    call ReadInt
+    mov  exponent, eax
+
+    cmp  eax, 0
+    jne  NotZero
+    mov  eax, 1
+    jmp  DisplayIntegerResult
+
+NotZero:
+    mov  eax, exponent
+    cmp  eax, 0
+    jg   PositiveExponent
+    jl   NegativeExponent
+
+PositiveExponent:
+    mov  eax, 1
+    mov  ecx, exponent
+    mov  ebx, base
+
+PositivePowerLoop:
+    imul ebx
+    loop PositivePowerLoop
+    jmp  DisplayIntegerResult
+
+NegativeExponent:
+    mov  eax, exponent
+    neg  eax
+    mov  ecx, eax
+    mov  ebx, base
+
+    cmp  ebx, 1
+    je   BaseIsOne
+    cmp  ebx, -1
+    je   BaseIsNegativeOne
+
+    mov  eax, 1
+    mov  edx, 0
+
+CalculatePositivePower:
+    imul ebx
+    jo   OverflowDetected
+    loop CalculatePositivePower
+
+    mov  result, eax
+
+    mov  edx, OFFSET msgResultPow
+    call WriteString
+    call Crlf
+
+    mov  edx, OFFSET msgFraction
+    call WriteString
+    mov  eax, result
+    call WriteInt
+    call Crlf
+
+    call DisplayDecimalForm
+    jmp  Done
+
+BaseIsOne:
+    mov  eax, 1
+    jmp  DisplayIntegerResult
+
+BaseIsNegativeOne:
+    test ecx, 1
+    jz   NegativeOneEven
+    mov  eax, -1
+    jmp  DisplayIntegerResult
+
+NegativeOneEven:
+    mov  eax, 1
+    jmp  DisplayIntegerResult
+
+DisplayDecimalForm PROC
+    fild result
+    fld1
+    fdiv
+    
+    mov  edx, OFFSET msgDecimal
+    call WriteString
+    call WriteFloat
+    call Crlf
+    call Crlf
+    
+    fstp decimalResult
+    ret
+DisplayDecimalForm ENDP
+
+OverflowDetected:
+    mov  edx, OFFSET msgResultPow
+    call WriteString
+    mov  edx, OFFSET msgFraction
+    call WriteString
+    mov  eax, base
+    call WriteInt
+    mov  al, '^'
+    call WriteChar
+    mov  eax, exponent
+    neg  eax
+    call WriteInt
+    call Crlf
+    
+    mov  edx, OFFSET msgDecimal
+    call WriteString
+    mov  edx, OFFSET msgOverflow
+    call WriteString
+    call Crlf
+    jmp  Done
+
+DisplayIntegerResult:
+    mov  result, eax
+    mov  edx, OFFSET msgResultPow
+    call WriteString
+    call WriteInt
+    call Crlf
+
+Done:
+    ret
+PowerCalculation ENDP
+
 MatrixAddition PROC
 
     ; Input rows for Matrix A
@@ -423,6 +551,9 @@ mainMenu:
     cmp choice, 3
     JE doMul
 
+    cmp eax, 5
+    JE doPower
+
     cmp choice, 7
     JE doSquare
     cmp choice, 10
@@ -447,6 +578,10 @@ doMul:
 
 doSquare:
     call sqProc
+    jmp mainMenu
+
+doPower:
+    call PowerCalculation
     jmp mainMenu
 
 doMatrixMul:
