@@ -53,7 +53,6 @@ addProc PROC
     mov edx, OFFSET msgResult
     call WriteString
     mov eax, result
-
     call WriteInt
     call Crlf
     ret
@@ -130,7 +129,6 @@ matrixMulProc PROC
 
     mov eax, colsA
     cmp eax, rowsB
-    jne invalidMul
     jne invalidMul
 
     ; zero matrixC
