@@ -177,6 +177,22 @@ PerformDivision:
     ret
 DivisionOperation ENDP
 
+Fact PROC
+    mov eax, num1        ; load the number for factorial
+    cmp eax, 0
+    je FactDone
+    mov ecx, eax         ; counter
+    mov eax, 1           ; accumulator for result
+
+    FactLoop:
+    imul eax, ecx        ; multiply accumulator by counter
+    loop FactLoop
+
+    FactDone:
+    mov result, eax      ; store result
+    ret
+Fact ENDP
+
 
 ;-------------------------
 ; Square
@@ -326,6 +342,56 @@ Done:
     ret
 PowerCalculation ENDP
 
+PermutationCalculation PROC
+
+    ; Input n
+    mov edx, OFFSET msgN
+    call WriteString
+    call ReadInt
+    mov n_value, eax
+
+    ; Input r
+    mov edx, OFFSET msgR
+    call WriteString
+    call ReadInt
+    mov r_value, eax
+
+    cmp eax, n_value
+    ja PermError
+
+    mov eax, n_value
+    mov num1, eax
+    call Fact
+    mov ebx, result       
+
+    mov eax, n_value
+    sub eax, r_value
+    mov num1, eax
+    call Fact
+    mov ecx, result     
+
+    mov eax, ebx
+    xor edx, edx          
+    div ecx
+    mov resultNPR, eax
+
+    mov edx, OFFSET msgResultNPR
+    call WriteString
+    mov eax, resultNPR
+    call WriteDec
+    call Crlf
+
+    ret
+
+PermError:
+    mov edx, OFFSET msgErrorNPR
+    call WriteString
+    call Crlf
+    ret
+
+PermutationCalculation ENDP
+
+
 MatrixAddition PROC
 
     ; Input rows for Matrix A
@@ -345,7 +411,6 @@ MatrixAddition PROC
     mul colsA
     mov totalElements, eax
 
-    ; Input Matrix A elements
     mov edx, OFFSET msgA
     call WriteString
     call Crlf
@@ -601,13 +666,20 @@ mainMenu:
     cmp eax, 5
     JE doPower
 
+    cmp eax, 6
+    JE doFactorial
+
     cmp choice, 7
     JE doSquare
+   
     cmp choice, 10
     JE doMatrixAdd
 
     cmp choice, 11
     JE doMatrixMul
+
+    cmp choice, 12
+    JE doPermutation
 
     jmp mainMenu
 
@@ -627,6 +699,20 @@ doDivision:
     call DivisionOperation
     jmp mainMenu
 
+doFactorial:
+    mov edx, OFFSET msgBase   
+    call WriteString
+    call ReadInt
+    mov num1, eax            
+    call Fact                 
+    mov eax, result           
+    mov edx, OFFSET msgResult
+    call WriteString
+    call WriteDec
+    call Crlf
+    jmp mainMenu
+
+
 doSquare:
     call sqProc
     jmp mainMenu
@@ -641,6 +727,10 @@ doMatrixMul:
 
 doMatrixAdd:
     call MatrixAddition
+    jmp mainMenu
+
+doPermutation:
+    call PermutationCalculation
     jmp mainMenu
 
 main ENDP
