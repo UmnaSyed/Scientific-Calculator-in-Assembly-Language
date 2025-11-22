@@ -112,6 +112,28 @@ subProc PROC
     ret
 subProc ENDP
 
+Multiplication PROC
+    mov edx, OFFSET msgIn1
+    call WriteString
+    call ReadInt
+    mov ebx, eax
+
+    mov edx, OFFSET msgIn2
+    call WriteString
+    call ReadInt
+    mov ecx, eax
+
+    mov eax, ebx
+    imul ecx
+    mov product, eax    
+
+    mov edx, OFFSET msgResult
+    call WriteString
+    call WriteInt
+    call Crlf
+    ret
+Multiplication ENDP
+
 ;-------------------------
 ; Square
 sqProc PROC
@@ -394,11 +416,15 @@ mainMenu:
 
     cmp choice, 1
     JE doAdd
+
     cmp choice, 2
     JE doSub
+
+    cmp choice, 3
+    JE doMul
+
     cmp choice, 7
     JE doSquare
-
     cmp choice, 10
     JE doMatrixAdd
 
@@ -413,6 +439,10 @@ doAdd:
 
 doSub:
     call subProc
+    jmp mainMenu
+
+doMul:
+    call Multiplication
     jmp mainMenu
 
 doSquare:
