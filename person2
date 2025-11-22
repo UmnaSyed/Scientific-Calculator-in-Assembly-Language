@@ -2,22 +2,25 @@ INCLUDE Irvine32.inc
 
 .data
 menu BYTE 0Dh,0Ah,'1.Addition 2.Subtraction 3.Multiplication 4.Division 5.Power 6.Factorial 7.Square 8.Cube 9.%',0Dh,0Ah,\
-                      '10.Matrix Addition 11.Matrix Multiplication 12.Permutation 13.Combination 14. Trignometric Functions 0.Exit',0Dh,0Ah,\
+      '10.Matrix Addition 11.Matrix Multiplication 12.Permutation 13.Combination 14.Trigonometric Functions 0.Exit',0Dh,0Ah,0
 
-msgOpt BYTE "Enter your choice: ", 0
-msgIn1  BYTE "Enter First number: ", 0
-msgIn2 BYTE "Enter Second number: ", 0
-msgBase BYTE "Enter Base number: ",
-msgArows BYTE "Enter Matrix A Row Size (UPTO 3): ", 0
-msgBrows BYTE "Enter Matrix B Row Size (UPTO 3): ", 0
-msgAcols BYTE "Enter Matrix A Column Size (UPTO 3): ", 0
-msgBcols BYTE "Enter Matrix B Column Size (UPTO 3): ", 0
-msgCresult BYTE "Resultant Matrix: ", 0
-msgA BYTE "Enter Matrix A Elements (Row-Wise)", 0
-msgA BYTE "Enter Matrix B Elements (Row-Wise)", 0
-msgResult BYTE "Answer: ", 0
+msgOpt BYTE "Enter your choice: ",0
+msgIn1 BYTE "Enter First number: ",0
+msgIn2 BYTE "Enter Second number: ",0
+msgBase BYTE "Enter Base number: ",0
+msgArows BYTE "Enter Matrix A Row Size (UPTO 3): ",0
+msgBrows BYTE "Enter Matrix B Row Size (UPTO 3): ",0
+msgAcols BYTE "Enter Matrix A Column Size (UPTO 3): ",0
+msgBcols BYTE "Enter Matrix B Column Size (UPTO 3): ",0
+msgCresult BYTE "Resultant Matrix: ",0
+msgA BYTE "Enter Matrix A Elements (Row-Wise): ",0
+msgB BYTE "Enter Matrix B Elements (Row-Wise): ",0
+msgResult BYTE "Answer: ",0
+space BYTE " ",0
+invalidMsg BYTE "Matrix multiplication not possible!",0
+
 choice DWORD ?
-num1 SDWROD ?
+num1 SDWORD ?
 num2 SDWORD ?
 rowsA DWORD ?
 rowsB DWORD ?
@@ -28,66 +31,11 @@ matrixB SDWORD 9 DUP(0)
 matrixC SDWORD 9 DUP(0)
 result SDWORD ?
 
-
 .code
-main PROC
 
-mainMenu:
-    mov edx, OFFSET menu
-    call WriteString
-    mov edx, OFFSET msgOpt
-    call WriteString
-    call ReadInt
-    mov choice, eax
-
-    cmp choice, 0
-    JE exit_prog
-
-    cmp choice, 1
-    JE add_proc
-
-    cmp choice, 2
-    JE sub_proc
-
-    cmp choice, 3
-    JE mul_proc
-
-    cmp choice, 4
-    JE div_proc
-
-    cmp choice, 5
-    JE pow_proc
-
-    cmp choice, 6
-    JE fact_proc
-
-    cmp choice, 7
-    JE sq_proc
-
-    cmp choice, 8
-    JE cube_proc
-
-    cmp choice, 9
-    JE percentage_proc
-
-    cmp choice, 10
-    JE matrix_add
-
-    cmp choice, 11
-    JE matrix_mul
-
-    cmp choice, 12
-    JE perm_proc
-
-    cmp choice, 13
-    JE comb_proc
-
-    cmp choice, 14
-    JE trig_func
-
-    jmp mainMenu
-
-add_proc PROC
+;-------------------------
+; Addition
+addProc PROC
     mov edx, OFFSET msgIn1
     call WriteString
     call ReadInt
@@ -105,13 +53,15 @@ add_proc PROC
     mov edx, OFFSET msgResult
     call WriteString
     mov eax, result
-    call writeInt
+
+    call WriteInt
     call Crlf
+    ret
+addProc ENDP
 
-    jmp mainMenu
-add_proc ENDP
-
-sub_proc PROC
+;-------------------------
+; Subtraction
+subProc PROC
     mov edx, OFFSET msgIn1
     call WriteString
     call ReadInt
@@ -129,14 +79,14 @@ sub_proc PROC
     mov edx, OFFSET msgResult
     call WriteString
     mov eax, result
-    call writeInt
+    call WriteInt
     call Crlf
+    ret
+subProc ENDP
 
-    jmp mainMenu
-sub_proc ENDP
-
-
-sq_proc PROC
+;-------------------------
+; Square
+sqProc PROC
     mov edx, OFFSET msgBase
     call WriteString
     call ReadInt
@@ -146,25 +96,204 @@ sq_proc PROC
     imul eax, eax
     mov result, eax
 
-    mov edx, OFFSET 
     mov edx, OFFSET msgResult
     call WriteString
     mov eax, result
-    call writeInt
+    call WriteDec
     call Crlf
+    ret
+sqProc ENDP
 
-    jmp mainMenu
-sq_proc ENDP
-
-
-matrix_mul PROC
-    mov edx, OFFSET matSizeMsg
+;-------------------------
+; Matrix Multiplication
+matrixMulProc PROC
+    ; read dimensions
+    mov edx, OFFSET msgArows
     call WriteString
     call ReadInt
-matrix_mul ENDP
+    mov rowsA, eax
 
-exit_prog PROC
+    mov edx, OFFSET msgAcols
+    call WriteString
+    call ReadInt
+    mov colsA, eax
+
+    mov edx, OFFSET msgBrows
+    call WriteString
+    call ReadInt
+    mov rowsB, eax
+
+    mov edx, OFFSET msgBcols
+    call WriteString
+    call ReadInt
+    mov colsB, eax
+
+    mov eax, colsA
+    cmp eax, rowsB
+    jne invalidMul
+    jne invalidMul
+
+    ; zero matrixC
+    mov ecx, 9
+    mov edi, OFFSET matrixC
+    xor eax, eax
+zeroLoop:
+    mov [edi], eax
+    add edi, 4
+    loop zeroLoop
+
+    ; input matrixA
+    mov edx, OFFSET msgA
+    call WriteString
+    mov esi, OFFSET matrixA
+    mov ecx, rowsA
+readARows:
+    push ecx
+    mov ecx, colsA
+readACols:
+    call ReadInt
+    mov [esi], eax
+    add esi, 4
+    loop readACols
+    pop ecx
+    loop readARows
+
+    ; input matrixB
+    mov edx, OFFSET msgB
+    call WriteString
+    mov esi, OFFSET matrixB
+    mov ecx, rowsB
+readBRows:
+    push ecx
+    mov ecx, colsB
+readBCols:
+    call ReadInt
+    mov [esi], eax
+    add esi, 4
+    loop readBCols
+    pop ecx
+    loop readBRows
+
+    ; multiply
+    mov eax,0
+    xor edi, edi      ; matrixC index
+    mov ebx,0         ; row i
+iLoop:
+    cmp ebx, rowsA
+    jge doneMul
+    mov ecx,0         ; column j
+jLoop:
+    cmp ecx, colsB
+    jge nextI
+    xor edx, edx      ; accumulator for C[i][j]
+    mov esi,0         ; k
+kLoop:
+    cmp esi, colsA
+    jge storeC
+    ; A[i][k] index
+    mov eax, ebx
+    imul eax, colsA
+    add eax, esi
+    mov eax, [matrixA + eax*4]
+    ; B[k][j] index
+    mov edi, esi
+    imul edi, colsB
+    add edi, ecx
+    mov edi, [matrixB + edi*4]
+    imul eax, edi
+    add edx, eax
+    inc esi
+    jmp kLoop
+storeC:
+    mov eax, ebx
+    imul eax, colsB
+    add eax, ecx
+    mov [matrixC + eax*4], edx
+    inc ecx
+    jmp jLoop
+nextI:
+    inc ebx
+    jmp iLoop
+doneMul:
+    ; print result
+    mov edx, OFFSET msgCresult
+    call WriteString
+    call Crlf
+    mov ebx,0
+printRows:
+    cmp ebx, rowsA
+    jge endPrint
+    mov ecx,0
+printCols:
+    cmp ecx, colsB
+    jge nextPrintRow
+    mov eax, ebx
+    imul eax, colsB
+    add eax, ecx
+    mov eax, [matrixC + eax*4]
+    call WriteInt
+    mov edx, OFFSET space
+    call WriteString
+    inc ecx
+    jmp printCols
+nextPrintRow:
+    call Crlf
+    inc ebx
+    jmp printRows
+endPrint:
+    ret
+invalidMul:
+    mov edx, OFFSET invalidMsg
+    call WriteString
+    call Crlf
+    ret
+matrixMulProc ENDP
+
+;-------------------------
+exitProg PROC
     exit
+exitProg ENDP
 
-main endp
+;-------------------------
+main PROC
+mainMenu:
+    mov edx, OFFSET menu
+    call WriteString
+
+    mov edx, OFFSET msgOpt
+    call WriteString
+    call ReadInt
+    mov choice, eax
+
+    cmp choice, 0
+    JE exitProg
+
+    cmp choice, 1
+    JE doAdd
+    cmp choice, 2
+    JE doSub
+    cmp choice, 7
+    JE doSquare
+    cmp choice, 11
+    JE doMatrixMul
+
+    jmp mainMenu
+
+doAdd:
+    call addProc
+    jmp mainMenu
+
+doSub:
+    call subProc
+    jmp mainMenu
+
+doSquare:
+    call sqProc
+    jmp mainMenu
+
+doMatrixMul:
+    call matrixMulProc
+    jmp mainMenu
+
+main ENDP
 END main
