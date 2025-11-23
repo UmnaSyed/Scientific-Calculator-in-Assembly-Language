@@ -9,9 +9,6 @@ menu BYTE 0Dh,0Ah,
            '10. Matrix Addition 11. Matrix Multiplication       12. Permutation',0Dh,0Ah,
            '13. Combination     14. Trigonometric Functions     0. Exit',0Dh,0Ah,0
 
-
-
-
 msgOpt BYTE "Enter your choice: ",0
 msgIn1 BYTE "Enter First number: ",0
 msgIn2 BYTE "Enter Second number: ",0
@@ -32,9 +29,10 @@ msgError BYTE "Error: Division by zero!",0
 invalidMsg BYTE "Matrix multiplication not possible!",0
 msgBase        BYTE "Enter base: ",0
 msgExponent    BYTE "Enter exponent: ",0
-msgResultPow   BYTE "Power result: ",0
-msgFraction    BYTE "Fraction form: 1/",0
+msgResultPow   BYTE "Result: ",0
+msgFraction    BYTE "Fractional form: ",0
 msgDecimal     BYTE "Decimal form: ",0
+msgOneOver BYTE "1/", 0
 msgOne         BYTE "1",0
 msgNegativeOne BYTE "-1",0
 msgOverflow BYTE "Error! Overflow.",0
@@ -277,7 +275,6 @@ PercentProc ENDP
 
 
 PowerCalculation PROC
-
     mov  edx, OFFSET msgBase
     call WriteString
     call ReadInt
@@ -287,48 +284,47 @@ PowerCalculation PROC
     call WriteString
     call ReadInt
     mov  exponent, eax
-
-    cmp  eax, 0
+ 
+    cmp  exponent, 0
     jne  NotZero
     mov  eax, 1
     jmp  DisplayIntegerResult
 
 NotZero:
-    mov  eax, exponent
-    cmp  eax, 0
+    cmp  exponent, 0
     jg   PositiveExponent
-    jl   NegativeExponent
+
+    jmp  NegativeExponent
 
 PositiveExponent:
-    mov  eax, 1
-    mov  ecx, exponent
+    mov  eax, 1         
+    mov  ecx, exponent   
     mov  ebx, base
 
-PositivePowerLoop:
+PosPowLoop:
     imul ebx
-    loop PositivePowerLoop
+    loop PosPowLoop
     jmp  DisplayIntegerResult
 
 NegativeExponent:
     mov  eax, exponent
     neg  eax
-    mov  ecx, eax
+    mov  ecx, eax        
     mov  ebx, base
 
+    ; special cases
     cmp  ebx, 1
     je   BaseIsOne
     cmp  ebx, -1
-    je   BaseIsNegativeOne
+    je   BaseIsNegOne
 
-    mov  eax, 1
-    mov  edx, 0
+    mov  eax, 1         
 
-CalculatePositivePower:
+NegPowLoop:
     imul ebx
-    jo   OverflowDetected
-    loop CalculatePositivePower
+    loop NegPowLoop
 
-    mov  result, eax
+    mov  result, eax    
 
     mov  edx, OFFSET msgResultPow
     call WriteString
@@ -336,62 +332,29 @@ CalculatePositivePower:
 
     mov  edx, OFFSET msgFraction
     call WriteString
-    mov  eax, result
-    call WriteInt
-    call Crlf
 
-    call DisplayDecimalForm
+    mov  edx, OFFSET msgOneOver
+    call WriteString      
+
+    mov  eax, result
+    call WriteDec         
+    call Crlf
     jmp  Done
 
 BaseIsOne:
     mov  eax, 1
     jmp  DisplayIntegerResult
 
-BaseIsNegativeOne:
-    test ecx, 1
-    jz   NegativeOneEven
+BaseIsNegOne:
+    mov  eax, exponent
+    test eax, 1          
+    jz   EvenExp
     mov  eax, -1
     jmp  DisplayIntegerResult
 
-NegativeOneEven:
+EvenExp:
     mov  eax, 1
     jmp  DisplayIntegerResult
-
-DisplayDecimalForm PROC
-    fild result
-    fld1
-    fdiv
-    
-    mov  edx, OFFSET msgDecimal
-    call WriteString
-    call WriteFloat
-    call Crlf
-    call Crlf
-    
-    fstp decimalResult
-    ret
-DisplayDecimalForm ENDP
-
-OverflowDetected:
-    mov  edx, OFFSET msgResultPow
-    call WriteString
-    mov  edx, OFFSET msgFraction
-    call WriteString
-    mov  eax, base
-    call WriteInt
-    mov  al, '^'
-    call WriteChar
-    mov  eax, exponent
-    neg  eax
-    call WriteInt
-    call Crlf
-    
-    mov  edx, OFFSET msgDecimal
-    call WriteString
-    mov  edx, OFFSET msgOverflow
-    call WriteString
-    call Crlf
-    jmp  Done
 
 DisplayIntegerResult:
     mov  result, eax
@@ -399,20 +362,19 @@ DisplayIntegerResult:
     call WriteString
     call WriteInt
     call Crlf
+    jmp  Done
 
 Done:
     ret
 PowerCalculation ENDP
 
-PermutationCalculation PROC
 
-    ; Input n
+PermutationCalculation PROC
     mov edx, OFFSET msgN
     call WriteString
     call ReadInt
     mov n_value, eax
 
-    ; Input r
     mov edx, OFFSET msgR
     call WriteString
     call ReadInt
@@ -453,30 +415,25 @@ PermError:
 
 PermutationCalculation ENDP
 
-
 CombinationCalculation PROC
     push ebp
     mov ebp, esp
 
-    ; Calculate n! - store n in num1 first
-    mov eax, [ebp+12]   ; n
-    mov num1, eax 
+    mov eax, [ebp+12]   
+    push eax
     call Fact
     mov nfact, eax
 
-    ; Calculate r! - store r in num1 first
-    mov eax, [ebp+8]    ; r
-    mov num1, eax
+    mov eax, [ebp+8]    
+    push eax
     call Fact
     mov rfact, eax
 
-    ; Calculate (n-r)! - store (n-r) in num1 first
     mov eax, nMINUSr
-    mov num1, eax
+    push eax
     call Fact
     mov nMINUSrFact, eax
 
-    ; Calculate nCr = n! / (r! * (n-r)!)
     mov eax, rfact
     mul nMINUSrFact
     mov ecx, eax
@@ -497,20 +454,16 @@ CombinationCalculation ENDP
 
 
 MatrixAddition PROC
-
-    ; Input rows for Matrix A
     mov edx, OFFSET msgArows
     call WriteString
     call ReadInt
     mov rowsA, eax
 
-    ; Input columns for Matrix A
     mov edx, OFFSET msgAcols
     call WriteString
     call ReadInt
     mov colsA, eax
 
-    ; Compute total elements
     mov eax, rowsA
     mul colsA
     mov totalElements, eax
@@ -527,7 +480,6 @@ ReadA:
     add esi, 4
     loop ReadA
 
-    ; Input Matrix B elements
     mov edx, OFFSET msgB
     call WriteString
     call Crlf
@@ -590,7 +542,6 @@ EndPrintRows:
 MatrixAddition ENDP
 
 matrixMulProc PROC
-    ; read dimensions
     mov edx, OFFSET msgArows
     call WriteString
     call ReadInt
@@ -615,23 +566,24 @@ matrixMulProc PROC
     cmp eax, rowsB
     jne invalidMul
 
-    ; zero matrixC
     mov ecx, 9
     mov edi, OFFSET matrixC
     xor eax, eax
+
 zeroLoop:
     mov [edi], eax
     add edi, 4
     loop zeroLoop
 
-    ; input matrixA
     mov edx, OFFSET msgA
     call WriteString
     mov esi, OFFSET matrixA
     mov ecx, rowsA
+
 readARows:
     push ecx
     mov ecx, colsA
+
 readACols:
     call ReadInt
     mov [esi], eax
@@ -640,14 +592,15 @@ readACols:
     pop ecx
     loop readARows
 
-    ; input matrixB
     mov edx, OFFSET msgB
     call WriteString
     mov esi, OFFSET matrixB
     mov ecx, rowsB
+
 readBRows:
     push ecx
     mov ecx, colsB
+
 readBCols:
     call ReadInt
     mov [esi], eax
@@ -658,26 +611,26 @@ readBCols:
 
     ; multiply
     mov eax,0
-    xor edi, edi      ; matrixC index
-    mov ebx,0         ; row i
+    xor edi, edi      
+    mov ebx,0         
 iLoop:
     cmp ebx, rowsA
     jge doneMul
-    mov ecx,0         ; column j
+    mov ecx,0        
 jLoop:
     cmp ecx, colsB
     jge nextI
-    xor edx, edx      ; accumulator for C[i][j]
-    mov esi,0         ; k
+    xor edx, edx      
+    mov esi,0        
 kLoop:
     cmp esi, colsA
     jge storeC
-    ; A[i][k] index
+
     mov eax, ebx
     imul eax, colsA
     add eax, esi
     mov eax, [matrixA + eax*4]
-    ; B[k][j] index
+
     mov edi, esi
     imul edi, colsB
     add edi, ecx
@@ -773,9 +726,6 @@ tri_done:
     ret
 TrigonometricCalculation ENDP
 
-
-; Convert Angle to Radians in ST(0)
-
 ReadAngleToST0 PROC
     mov edx, OFFSET angleMsg
     call WriteString
@@ -828,13 +778,11 @@ print_digits:
     ret
 PrintFixedFloat ENDP
 
-
-;-------------------------
 exitProg PROC
     exit
 exitProg ENDP
 
-;-------------------------
+
 main PROC
 mainMenu:
     mov edx, OFFSET menu
