@@ -453,25 +453,26 @@ PermError:
 
 PermutationCalculation ENDP
 
+
 CombinationCalculation PROC
     push ebp
     mov ebp, esp
 
-    ; Calculate n!
+    ; Calculate n! - store n in num1 first
     mov eax, [ebp+12]   ; n
-    push eax
+    mov num1, eax 
     call Fact
     mov nfact, eax
 
-    ; Calculate r!
+    ; Calculate r! - store r in num1 first
     mov eax, [ebp+8]    ; r
-    push eax
+    mov num1, eax
     call Fact
     mov rfact, eax
 
-    ; Calculate (n-r)!
+    ; Calculate (n-r)! - store (n-r) in num1 first
     mov eax, nMINUSr
-    push eax
+    mov num1, eax
     call Fact
     mov nMINUSrFact, eax
 
