@@ -871,6 +871,9 @@ mainMenu:
     cmp eax, 8
     je doCube
 
+    cmp eax, 9
+    je doPercentage
+
     cmp choice, 10
     JE doMatrixAdd
 
