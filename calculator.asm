@@ -33,7 +33,17 @@ msgOverflow BYTE "Error! Overflow.",0
 msgN BYTE "Enter n (total items): ",0
 msgR BYTE "Enter r (selected items): ",0
 msgResultNPR BYTE "nPr result: ",0
+nCrMsg BYTE "nCr result: ",0
 msgErrorNPR BYTE "Error: r cannot be greater than n!",0
+triMenu    BYTE "----- Trigonometric Menu -----",0dh,0ah,
+                  "1. sin(x)",0dh,0ah,
+                  "2. cos(x)",0dh,0ah,
+                  "3. tan(x)",0dh,0ah,
+                  "4. Back to Main Menu",0dh,0ah,
+                  "Enter choice: ",0
+
+angleMsg   BYTE "Enter angle in degrees: ",0
+
 
 choice DWORD ?
 num1 SDWORD ?
@@ -44,10 +54,13 @@ colsA DWORD ?
 colsB DWORD ?
 n_value DWORD ?
 r_value DWORD ?
+nMINUSr DWORD ?
+nfact DWORD ?
+rfact DWORD ?
+nMINUSrFact DWORD ?
 resultNPR DWORD 1
 base SDWORD ?
 exponent SDWORD ?
-
 temp SDWORD ?
 decimalResult  REAL8 ?
 matrixA SDWORD 9 DUP(0)
@@ -58,7 +71,9 @@ result SDWORD ?
 product SDWORD ?
 quotient SDWORD ?
 remainder SDWORD ?
-
+tempInt DWORD ?
+degToRad REAL8 0.017453292519943295
+mul_10000 REAL8 10000.0
 
 .code
 
@@ -391,6 +406,47 @@ PermError:
 
 PermutationCalculation ENDP
 
+CombinationCalculation PROC
+    push ebp
+    mov ebp, esp
+
+    ; Calculate n!
+    mov eax, [ebp+12]   ; n
+    push eax
+    call Fact
+    mov nfact, eax
+
+    ; Calculate r!
+    mov eax, [ebp+8]    ; r
+    push eax
+    call Fact
+    mov rfact, eax
+
+    ; Calculate (n-r)!
+    mov eax, nMINUSr
+    push eax
+    call Fact
+    mov nMINUSrFact, eax
+
+    ; Calculate nCr = n! / (r! * (n-r)!)
+    mov eax, rfact
+    mul nMINUSrFact
+    mov ecx, eax
+
+    mov eax, nfact
+    xor edx, edx
+    div ecx
+
+    mov edx, OFFSET nCrMsg
+    call WriteString
+    call WriteInt
+    call CrLf
+    call CrLf
+
+    pop ebp
+    ret 8
+CombinationCalculation ENDP
+
 
 MatrixAddition PROC
 
@@ -632,6 +688,104 @@ invalidMul:
     ret
 matrixMulProc ENDP
 
+
+TrigonometricCalculation PROC
+
+tri_loop:
+    mov edx, OFFSET triMenu
+    call WriteString
+    call ReadInt
+    mov ebx, eax
+
+    cmp ebx, 1
+    je do_sin
+    cmp ebx, 2
+    je do_cos
+    cmp ebx, 3
+    je do_tan
+    cmp ebx, 4
+    je tri_done
+    jmp tri_loop
+
+do_sin:
+    call ReadAngleToST0
+    fsin
+    call PrintFixedFloat
+    jmp tri_loop
+
+do_cos:
+    call ReadAngleToST0
+    fcos
+    call PrintFixedFloat
+    jmp tri_loop
+
+do_tan:
+    call ReadAngleToST0
+    fptan
+    fstp st(0)
+    call PrintFixedFloat
+    jmp tri_loop
+
+tri_done:
+    ret
+TrigonometricCalculation ENDP
+
+
+; Convert Angle to Radians in ST(0)
+
+ReadAngleToST0 PROC
+    mov edx, OFFSET angleMsg
+    call WriteString
+    call ReadFloat
+
+    fld degToRad
+    fmulp st(1), st(0)
+    ret
+ReadAngleToST0 ENDP
+
+
+PrintFixedFloat PROC
+    mov edx, OFFSET msgResult
+    call WriteString
+
+    fld mul_10000
+    fmulp st(1), st(0)
+
+    fistp tempInt
+
+    mov eax, tempInt
+    mov ebx, 10000
+    xor edx, edx
+    div ebx
+
+    call WriteDec
+    mov al, '.'
+    call WriteChar
+
+    mov eax, edx
+    mov ecx, 4
+
+print_frac:
+    mov ebx, 10
+    xor edx, edx
+    div ebx
+    push dx
+    loop print_frac
+
+    mov ecx, 4
+print_digits:
+    pop dx
+    add dl, '0'
+    mov al, dl
+    call WriteChar
+    loop print_digits
+
+    call CrLf
+    call CrLf
+    ret
+PrintFixedFloat ENDP
+
+
 ;-------------------------
 exitProg PROC
     exit
@@ -680,6 +834,12 @@ mainMenu:
 
     cmp choice, 12
     JE doPermutation
+
+    cmp choice, 13
+    JE doCombination
+
+    cmp choice, 14
+    JE doTrig
 
     jmp mainMenu
 
@@ -731,6 +891,30 @@ doMatrixAdd:
 
 doPermutation:
     call PermutationCalculation
+    jmp mainMenu
+
+doCombination:
+    mov edx, OFFSET msgN
+    call WriteString
+    call ReadInt
+    mov n_value, eax
+
+    mov edx, OFFSET msgR
+    call WriteString
+    call ReadInt
+    mov r_value, eax
+
+    mov ecx, n_value
+    sub ecx, r_value
+    mov nMINUSr, ecx
+
+    push n_value
+    push r_value
+    call CombinationCalculation
+    jmp mainMenu
+
+doTrig:
+    call TrigonometricCalculation
     jmp mainMenu
 
 main ENDP
