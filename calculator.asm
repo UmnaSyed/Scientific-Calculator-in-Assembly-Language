@@ -39,6 +39,7 @@ msgOverflow BYTE "Error! Overflow.",0
 msgN BYTE "Enter n (total items): ",0
 msgR BYTE "Enter r (selected items): ",0
 msgResultNPR BYTE "nPr result: ",0
+msgResultNCR BYTE "nCr result: ",0
 nCrMsg BYTE "nCr result: ",0
 msgErrorNPR BYTE "Error: r cannot be greater than n!",0
 triMenu    BYTE "----- Trigonometric Menu -----",0dh,0ah,
@@ -416,41 +417,66 @@ PermError:
 PermutationCalculation ENDP
 
 CombinationCalculation PROC
-    push ebp
-    mov ebp, esp
+    mov edx, OFFSET msgN
+    call WriteString
+    call ReadInt
+    mov n_value, eax
 
-    mov eax, [ebp+12]   
-    push eax
-    call Fact
-    mov nfact, eax
+    mov edx, OFFSET msgR
+    call WriteString
+    call ReadInt
+    mov r_value, eax
 
-    mov eax, [ebp+8]    
-    push eax
-    call Fact
-    mov rfact, eax
+    ; Validate r <= n
+    mov eax, r_value
+    cmp eax, n_value
+    jle ContinueCalc
 
-    mov eax, nMINUSr
-    push eax
+    mov edx, OFFSET msgErrorNPR
+    call WriteString
+    call Crlf
+    ret
+
+ContinueCalc:
+    ; ---------- Calculate n! ----------
+    mov eax, n_value
+    mov num1, eax
     call Fact
-    mov nMINUSrFact, eax
+    mov eax, result
+    mov nfact, eax        ; store n!
+
+    mov eax, r_value
+    mov num1, eax
+    call Fact
+    mov eax, result
+    mov rfact, eax        
+
+    mov eax, n_value
+    sub eax, r_value
+    mov nMINUSr, eax
+    mov num1, eax
+    call Fact
+    mov eax, result
+    mov nMINUSrFact, eax 
 
     mov eax, rfact
-    mul nMINUSrFact
-    mov ecx, eax
+    imul nMINUSrFact
+    mov ecx, eax            
 
     mov eax, nfact
     xor edx, edx
     div ecx
+    mov resultNPR, eax      
 
-    mov edx, OFFSET nCrMsg
+    mov edx, OFFSET msgResultNCR
     call WriteString
-    call WriteInt
-    call CrLf
-    call CrLf
+    mov eax, resultNPR
+    call WriteDec
+    call Crlf
 
-    pop ebp
-    ret 8
+    ret
 CombinationCalculation ENDP
+
 
 
 MatrixAddition PROC
@@ -914,22 +940,6 @@ doPermutation:
     jmp mainMenu
 
 doCombination:
-    mov edx, OFFSET msgN
-    call WriteString
-    call ReadInt
-    mov n_value, eax
-
-    mov edx, OFFSET msgR
-    call WriteString
-    call ReadInt
-    mov r_value, eax
-
-    mov ecx, n_value
-    sub ecx, r_value
-    mov nMINUSr, ecx
-
-    push n_value
-    push r_value
     call CombinationCalculation
     jmp mainMenu
 
