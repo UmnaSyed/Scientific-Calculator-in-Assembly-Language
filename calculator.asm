@@ -1,8 +1,10 @@
 INCLUDE Irvine32.inc
 
 .data
-menu BYTE 0Dh,0Ah,'1.Addition 2.Subtraction 3.Multiplication 4.Division 5.Power 6.Factorial 7.Square 8.Cube 9.%',0Dh,0Ah,\
+
+menu BYTE 0Dh,0Ah,'1.Addition 2.Subtraction 3.Multiplication 4.Division 5.Power 6.Factorial 7.Square 8.Cube 9.Percentage',0Dh,0Ah,\
       '10.Matrix Addition 11.Matrix Multiplication 12.Permutation 13.Combination 14.Trigonometric Functions 0.Exit',0Dh,0Ah,0
+
 
 msgOpt BYTE "Enter your choice: ",0
 msgIn1 BYTE "Enter First number: ",0
@@ -43,6 +45,7 @@ triMenu    BYTE "----- Trigonometric Menu -----",0dh,0ah,
                   "Enter choice: ",0
 
 angleMsg   BYTE "Enter angle in degrees: ",0
+perSymb BYTE "%",0
 
 
 choice DWORD ?
@@ -77,8 +80,6 @@ mul_10000 REAL8 10000.0
 
 .code
 
-;-------------------------
-; Addition
 addProc PROC
     mov edx, OFFSET msgIn1
     call WriteString
@@ -102,8 +103,6 @@ addProc PROC
     ret
 addProc ENDP
 
-;-------------------------
-; Subtraction
 subProc PROC
     mov edx, OFFSET msgIn1
     call WriteString
@@ -209,8 +208,6 @@ Fact PROC
 Fact ENDP
 
 
-;-------------------------
-; Square
 sqProc PROC
     mov edx, OFFSET msgBase
     call WriteString
@@ -228,6 +225,50 @@ sqProc PROC
     call Crlf
     ret
 sqProc ENDP
+
+CubeProc PROC
+    push ebp
+    mov ebp, esp
+
+    mov eax, [ebp+8]
+    mov ebx, eax
+    mul ebx
+    mul ebx
+
+    mov edx, OFFSET msgResult
+    call WriteString
+    call WriteInt
+    call CrLf
+    call CrLf
+
+    pop ebp
+    ret 4
+CubeProc ENDP
+
+PercentProc PROC
+    push ebp
+    mov ebp, esp
+
+    mov eax, [ebp+12]   
+    mov ebx, [ebp+8]    
+    mov ecx, 100
+    xor edx, edx
+
+    mul ebx
+    div ecx
+
+    mov edx, OFFSET msgResult
+    call WriteString
+    call WriteInt
+    mov edx, OFFSET perSymb
+    call WriteString
+    call CrLf
+    call CrLf
+
+    pop ebp
+    ret 8
+PercentProc ENDP
+
 
 PowerCalculation PROC
 
@@ -492,7 +533,6 @@ ReadB:
     add esi, 4
     loop ReadB
 
-    ; Perform matrix addition: C = A + B
     mov esi, OFFSET matrixA
     mov edi, OFFSET matrixB
     mov ebx, OFFSET matrixC
@@ -507,20 +547,19 @@ AddLoop:
     add ebx, 4
     loop AddLoop
 
-    ; Display result
     mov edx, OFFSET msgCresult
     call WriteString
     call Crlf
 
-    mov ecx, rowsA       ; number of rows
-    mov ebx, 0           ; row counter
+    mov ecx, rowsA      
+    mov ebx, 0           
     mov esi, OFFSET matrixC
 
 PrintRows:
     cmp ebx, rowsA
     jge EndPrintRows
-    mov ecx, colsA       ; number of columns
-    mov edi, 0           ; column counter
+    mov ecx, colsA      
+    mov edi, 0         
 
 PrintCols:
     cmp edi, colsA
@@ -543,9 +582,6 @@ EndPrintRows:
 
 MatrixAddition ENDP
 
-
-;-------------------------
-; Matrix Multiplication
 matrixMulProc PROC
     ; read dimensions
     mov edx, OFFSET msgArows
@@ -825,7 +861,10 @@ mainMenu:
 
     cmp choice, 7
     JE doSquare
-   
+
+    cmp eax, 8
+    je doCube
+
     cmp choice, 10
     JE doMatrixAdd
 
@@ -875,6 +914,29 @@ doFactorial:
 
 doSquare:
     call sqProc
+    jmp mainMenu
+
+doCube:
+    mov edx, OFFSET msgBase
+    call WriteString
+    call ReadInt
+    push eax
+    call CubeProc
+    jmp mainMenu
+
+doPercentage:
+    mov edx, OFFSET msgIn1
+    call WriteString
+    call ReadInt
+    mov ebx, eax
+
+    mov edx, OFFSET msgIn2
+    call WriteString
+    call ReadInt
+
+    push ebx   
+    push eax   
+    call PercentProc
     jmp mainMenu
 
 doPower:
