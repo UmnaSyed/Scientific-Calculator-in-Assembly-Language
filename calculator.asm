@@ -2,8 +2,14 @@ INCLUDE Irvine32.inc
 
 .data
 
-menu BYTE 0Dh,0Ah,'1.Addition 2.Subtraction 3.Multiplication 4.Division 5.Power 6.Factorial 7.Square 8.Cube 9.Percentage',0Dh,0Ah,\
-      '10.Matrix Addition 11.Matrix Multiplication 12.Permutation 13.Combination 14.Trigonometric Functions 0.Exit',0Dh,0Ah,0
+menu BYTE 0Dh,0Ah,
+           '1. Addition         2. Subtraction                  3. Multiplication',0Dh,0Ah,
+           '4. Division         5. Power                        6. Factorial',0Dh,0Ah,
+           '7. Square           8. Cube                         9. Percentage',0Dh,0Ah,
+           '10. Matrix Addition 11. Matrix Multiplication       12. Permutation',0Dh,0Ah,
+           '13. Combination     14. Trigonometric Functions     0. Exit',0Dh,0Ah,0
+
+
 
 
 msgOpt BYTE "Enter your choice: ",0
